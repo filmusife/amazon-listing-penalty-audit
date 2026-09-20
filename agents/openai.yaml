@@ -1,0 +1,5 @@
+interface:
+  display_name: "Amazon Listing 7项隐性减分体检"
+  short_description: "按7个静默减分项体检Listing并给出可粘贴改法"
+  brand_color: "#FF9900"
+  default_prompt: "Use $amazon-listing-penalty-audit to audit my US Amazon ASIN against the 7 silent listing penalties and give paste-ready fixes for every variant."
