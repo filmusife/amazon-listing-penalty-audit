@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Amazon Listing Audit Input Data Template",
+  "marketplace": "US",
+  "asin": "B0XXXXXXXX",
+  "parent_asin": "B0YYYYYYYY",
+  "category_overlay": "kitchen-small-appliances",
+  "title": "SHARDOR Electric Coffee Grinder, 70g Capacity, Black",
+  "item_highlights": "Compact design, Stainless steel blade, One-touch operation",
+  "bullets": [
+    "Compact Electric Grinder with One-Touch Operation for Coffee Beans",
+    "70g Capacity Grinds Enough Beans for 3 to 4 Fresh Servings",
+    "Stainless Steel Dual Blade Quickly Grinds Coarse to Fine Powder",
+    "Compact Lightweight Design Fits Easily in Small Kitchen Cabinets",
+    "Includes Grinder and Brush, For Dry Beans Only Hand Wipe Clean"
+  ],
+  "search_terms": "electric spice herb seed chopping blade compact kitchen seasoning",
+  "attributes": {
+    "item_dimensions": "4.7\"L x 4.7\"W x 6.77\"H",
+    "material": "ABS Plastic, 304 Stainless Steel",
+    "style": "Compact",
+    "capacity": "70g",
+    "included_components": "Coffee Grinder, Cleaning Brush, User Manual",
+    "intended_use": "Coffee Beans, Dry Spices, Seeds",
+    "target_audience": "Coffee Enthusiasts, Home Cooks",
+    "warranty_description": "2-Year Limited Manufacturer Warranty"
+  },
+  "alts": {
+    "MAIN": "SHARDOR black electric coffee grinder front view with stainless steel blade on white background",
+    "IMG2": "SHARDOR black coffee grinder compact size diagram showing 6.77 inch height",
+    "IMG3": "SHARDOR coffee grinder 70 gram bowl with roasted coffee beans"
+  },
+  "aplus_alts": {
+    "A+1": "SHARDOR coffee grinder on modern kitchen marble countertop with fresh coffee mug",
+    "A+2": "SHARDOR grinder transparent lid showing coffee bean coarse grinding process"
+  }
+}
