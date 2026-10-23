@@ -20,7 +20,7 @@
 ### 2. 标准平铺表格规范（Flat Table / TSV）
 在报告末尾或多变体修复中，生成标准 TSV（制表符分隔）代码块，至少包含以下列：
 ```tsv
-feed_product_type	item_sku	external_product_id	external_product_id_type	item_name	item_highlights1	bullet_point1	bullet_point2	bullet_point3	bullet_point4	bullet_point5	generic_keywords	standard_price	main_image_url
+feed_product_type	item_sku	external_product_id	external_product_id_type	item_name	item_highlights1	bullet_point1	bullet_point2	bullet_point3	bullet_point4	bullet_point5	generic_keywords	item_dimensions	capacity	item_weight	color_name	material_type
 ```
 变体较多（≥3 个）时，平铺表格能极大减轻卖家手工复制的负担。
 
@@ -35,35 +35,56 @@ feed_product_type	item_sku	external_product_id	external_product_id_type	item_nam
 3. **农药杀菌（EPA）**：anti-microbial / antibacterial / mold-resistant / disinfectant（非 EPA 注册一律清除，改用物理特性描述）。
 4. **注册商标（IP）**：把 Velcro 改为 `hook and loop`；Thermos 改为 `insulated tumbler`；PopSockets 改为 `collapsible phone grip`；Gore-Tex 改为 `waterproof breathable fabric` 等。
 5. **违规符号**：标题禁用 `! $ ? _ { } ^ ¬ ¦`，五点禁用 【】★ emoji ™ ®，句末不加句号。
+6. **未认证环保宣称**：禁止使用 `eco-friendly`、`environmentally friendly`，避免触发环境声明政策限制。
 
 ---
 
-## 标题（Title）
+## 标题（Title，硬上限 200 字符，CTR 黄金区 + 长尾索引双层架构）
 
-- **公式**：`品牌 + 品类 + 1–2 个已验证核心规格 + 变体特征词`（颜色/尺寸/口味放最后）。
-- **长度与弹性**：
-  - 新上架或重写：默认推荐 ≤ 75 字符（含空格），规避移动端折叠和搜索抑制；
-  - 复杂 3C / 汽配 / 工业类目：若需体现必要年款或接口，可放宽至 100–120 字符，但核心信息前 70 字符必须闭环。
-- **溢出卖点分流**：
-  - 优先放入 **Item highlights**（≤125 字符，逗号分隔短语，不是句子）；
-  - *兜底策略*：若该商品所属类目后台**无 Item highlights 属性**，严禁让卖家无处粘贴，应将溢出卖点有序编入五点前 2 条的前置短语中。
+- **CTR 驱动的黄金结构（双层架构）**：
+  - **第一层：移动端 60–80 字符黄金区（CTR 命脉）**：
+    - **公式**：`[Brand] + [Core Product Keyword] + [Key Spec / Primary Metric] + [Top Differentiator]`
+    - **CTR 逻辑**：移动端搜索卡片因为屏幕限制会在 ~65 字符处折叠。买家必须在折叠前看清“谁家做的、具体是什么、核心多大/多强”。若品牌或品类词后置，点击率（CTR）将断崖式下跌。
+  - **第二层：高权重长尾索引区（80–180 字符）**：
+    - **内容**：收录核心长尾同义词、主要材质、兼容机型、适用场景与末尾变体词（颜色/尺寸放最后）。
+    - **算法逻辑**：A9 与 COSMO 语义引擎依然会完整建立这部分词条的搜索索引。控制在 120–180 字符既吃满搜索长尾曝光，又远离 200 字符搜索抑制红线。
+  - **切忌**：严禁机械式地把所有 Listing 标题强行砍成 ≤75 字符！这会导致 Listing 丢掉后半段关键搜索词，重创自然流量。
+- **关于数据抓取中的“管道符 `|`”**：
+  - 若输入数据含有 ` | `，通常为爬虫/ERP/`<title>` 标签拼接了标题与卖点高亮，**必须自动清洗剥离，严禁将抓取分隔符误判为卖家违规或臆造“系统腰斩扣分”**。在后台新提交文本中，推荐使用英文半角逗号 `,` 或连字符 `-`。
+- **格式规范**：Title Case（实词首字母大写，介词连词小写）；严禁全句 ALL CAPS；严禁全角符号（如中文逗号 `，`）与任何装饰符号。
+- **溢出卖点分流（协同 Item Highlights）**：
+  - 核心参数与卖点短语优先录入 **Item highlights**（≤125 字符，逗号分隔短语）；
+  - *兜底策略*：若该商品类目后台无 Item highlights 属性，将溢出卖点有序编入五点描述前 2 条中。
 - **英雄子体原则**：
   - 若英雄子体标题 **已经合规** 且有稳定小类排名，不要为了“更美观”去改它的标题。该 ASIN 不要输出标题代码块，只在思考区写“不动”和原因。
-  - 英雄标题一旦违规（含 warranty、夸大词、超长抑制、商标侵权），必须强制重写，排名好也不能留。
+  - 英雄标题一旦违规（含 warranty、夸大词、超 200 字符抑制、商标侵权），必须强制重写，排名好也不能留。
 - **其他子体**：套用统一标题模板，仅替换末尾变体词。
 
 ---
 
-## 五点（Bullet Points）
+## Item Highlights（商品核心亮点，官方限制 ≤ 125 字符，移动端 CVR 引擎）
 
-- 全部子体 **一字不差**，共用五点里严禁写死某个特定颜色/尺寸。
-- 5 条卖点，首字母大写，写成短语，**句末不加标点符号**，禁止整条 ALL CAPS。
-- **结构化映射（对齐 COSMO 与 Rufus 问答）**：
-  - Bullet 1: *是什么 / 给谁用*（产品定位、目标受众）
-  - Bullet 2: *核心可量化规格*（克数、尺寸、功率、成分）
-  - Bullet 3: *关键功能 / 解决的痛点*（操作机制、核心效能）
-  - Bullet 4: *使用场景 / 场合*（厨房、户外、日常办公）
-  - Bullet 5: *箱内清单与使用边界*（明确标配配件，说明不可用于某物，降低退货）
+- **字符限制**：**严格 ≤ 125 字符（含空格）**。
+- **格式**：短语形式，逗号分隔，不写完整长句，例如：`10oz Glass Pitcher, 5-in-1 Auto Presets, BPA-Free Tritan, One-Touch Self Clean`。
+- **转化率（CVR）价值**：位于移动端 PDP 详情页首屏黄金眼动区，买家扫视 3 秒即可确认是否符合购买预期，极大降低跳失率。
+
+---
+
+## 五点（Bullet Points，推荐 5 条，严格对齐 2024 年 8 月 15 日新规）
+
+- **字符限制**：推荐 3–5 条，单条建议控制在 **150–240 字符**（系统上限 255 字符），5 条总长建议不超过 **1,000 字符**（过长会在移动端折叠，降低买家阅读率）。
+- **标点与格式**：
+  - 采用 `[加粗/大写特性标签]: [利益点与事实阐述]`（如 `One-Touch Operation: Features 6 intuitive presets...`）；
+  - **末尾严禁加句号**（对齐亚马逊风格指南 "Do not end with punctuation"）；
+  - 禁止整条 ALL CAPS；
+  - **严禁 2024 官方违禁符号**：`™ ® © … † ‡ ± ~ € £ ¥ ✓ ❌ ★ ● 【】` 以及各类 Emoji。
+- **全部子体一致**：共用五点里严禁写死某个特定颜色/尺寸。
+- **结构化映射（双轮驱动 CVR 提升与 Rufus 问答截流）**：
+  - Bullet 1: *【定位与人群】*（明确产品定位，告诉买家“这是为你准备的”，提升意图契合度）
+  - Bullet 2: *【核心规格与性能】*（容量、材质、功率等实测数据，消除尺寸/性能疑虑，防退货）
+  - Bullet 3: *【便捷操作与核心痛点】*（操作简便度、自动程序、省时省力，强化购买冲动）
+  - Bullet 4: *【使用场景与生活契合】*（厨房、差旅、办公等生动场景，映射 COSMO 关系）
+  - Bullet 5: *【装箱清单与维护边界】*（明确列出 `included_components` 与保养清洗边界，杜绝买家误用差评与退货）
 - 粘贴块只有 5 行纯英文正文，不要带有 `Bullet 1:` 这样的中文前缀。
 
 ---
@@ -78,35 +99,42 @@ feed_product_type	item_sku	external_product_id	external_product_id_type	item_nam
 | `material` | 只写金属但壳体是塑料；混纺只写棉 | 真实主要材质（ABS Plastic, 304 Stainless Steel） |
 | `size` | Large（与尺寸筛选冲突） | 真实容量或标准尺码名 |
 | `included_components` | 件数不对、把固定部件写成配件 | 整机 + 真实可拆配件清单 |
-| `capacity` | 虚高营销杯数 | 可称重/测量的物理体积或重量口径 |
-| `item_weight` | 留空、抄容量 | 真实称重后填入 |
+| `capacity` | 把重量当容量（如 3.3 磅）或虚高杯数 | 真实液体体积或物理容量（40 fl oz, 8 Cups, 1.2L） |
+| `item_weight` | 留空、抄容量 | 真实称重净重（如 3.3 pounds） |
+| `item_dimensions` | 长宽高倒置（如高度填为 5.28"） | 真实长宽高物理测量（11.93"L x 5.28"W x 11.46"H） |
 | `warranty_description` | 写入标题/五点 | 仅填入此专用字段 |
 
 属性优先于 Search Terms。同一父体除变体维度外全部复制。
 
 ---
 
-## 图库 ALT（Gallery Images）
+## 图库 ALT（Gallery Images，主副图图文描述）
 
-- 匹配站点语言。美国站英文约 120–180 字符。
+- 匹配站点语言。美国站英文建议控制在 **80–150 字符**。
 - 句式：`{品牌} {变体词} {看得见的产品} with {材质或关键零件} for {图中场景}`
-- 必须按每个 ASIN 的实际槽位实图编写：`MAIN:`、`IMG2:`、`IMG3:`……
-- 描述当前画面，不堆砌无意义关键词，不写 warranty、best 或竞品词。
+- 必须按每个 ASIN 的实际槽位实图编写：`MAIN:`、`PT01:`、`PT02:`……
+- 描述当前画面真实特征，不堆砌无意义关键词，不写 warranty、best 或竞品词。
 
 ---
 
-## A+ ALT（必出）
+## A+ 图片 ALT（Image Keywords，卖家后台官方硬性限制 ≤ 100 字符）
 
-每个已分析的 A+ 图都必须有一句 ALT：
-- 按模块从上到下、图从左到右编号：`A+1:`、`A+2:`、`A+3:`……
-- 句式与图库 ALT 一致，描述可见事实。
-- 父体共用 A+ 输出一块 `### A+ ALT（父体共用）`。
+在亚马逊卖家中心 A+ Content Manager 中，上传图片必须填写的 Image Keywords（ALT 文本）**严格受后台系统字符限制：不得超过 100 个字符（≤ 100 characters，含空格）**。一旦超过 100 字符，后台系统将直接报错拦截，导致无法保存或提交审核！
+
+- **字符上限**：**严格 ≤ 100 字符（建议 50–95 字符最佳安全区间）**。
+- **编写原则**：
+  - 用一句精简流畅的自然英文描述可见画面主体、核心零件与使用动作；
+  - 严禁为了堆砌 A9 关键词而写超 100 字符；
+  - 严禁包含注册商标侵权词（如 Velcro）、保修词（warranty）或未认证环保词（eco-friendly）；
+  - 必须按页面模块从上到下、图从左到右编号：`A+1:`、`A+2:`、`A+3:`……
+  - 父体共用 A+ 输出一块 `### A+ ALT（父体共用）`。
 
 ---
 
-## Search Terms（ST）
+## Search Terms（ST，官方硬性限制 < 250 字节）
 
-- 美国站 < 250 字节，空格分隔，全小写，不重复。用脚本核验字节。
-- **收录**：前台未出现的真实同义词、次要场景、材质长尾。
+- **字节上限**：美国站 `generic_keywords` **严格小于 250 字节（< 250 Bytes，以 UTF-8 字节计算，不是字符数）**。达到或超过 250 字节，亚马逊系统将直接放弃对整个字段建立索引！
+- **格式规范**：空格分隔，全部小写，无需逗号或分号。
+- **收录**：前台标题、五点、属性中未出现的真实同义词、次要场景词、原料/材质长尾词。
 - **剔除**：自身品牌、竞品品牌、ASIN、标题/五点已有词、夸大词、warranty。
-- 代码块只有那一行干净的小写词，字节数标在思考区。
+- 代码块只有那一行干净的小写词，字节数标在思考区。用脚本严格核验字节。

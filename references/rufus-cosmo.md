@@ -1,37 +1,37 @@
 # Rufus / COSMO 发现层与事实对齐
 
-写标题、五点、属性、A+、ALT、Search Terms 时读。政策底线和 1–10 项判定仍以 amazon-policy / seven-items / extra-items 为准。本文件指导「合规之后怎么写，才对 AI 对话检索与图谱有用」。
+写标题、五点、属性、A+、ALT、Search Terms 时读。政策底线和 1–10 项判定仍以 amazon-policy / seven-items / extra-items 为准。本文件指导「合规之后怎么写，才对 AI 对话检索、常识图谱以及 CTR/CVR 提升有用」。
 
-Amazon **没有公布** Rufus / Alexa for Shopping 的完整权重公式。第三方博客里的「必须覆盖 8/15 条 COSMO 关系」「Q&A 提升 3.2 倍」一律当启发式，不要写成铁律，更不要为了凑关系编造前台没有证据的虚假场景。
-
-面向买家的购物助手（Rufus / Alexa for Shopping）核心检索机制：**读取结构化属性和可引用权威事实，而不是计算关键词堆砌密度**。
+Amazon 面向买家的购物助手（Rufus / Alexa for Shopping）核心检索机制：**读取结构化属性和可引用权威事实，而非计算关键词堆砌密度**。
 
 ---
 
 ## 优化思考的三层递进模型
 
-1. **第一层：政策合规底线（Floor）**：违规词、超长标题、图上徽章、EPA/商标侵权词先清掉。不能为了「SEO 检索」把违禁词留在 PDP。
+1. **第一层：政策合规底线（Floor）**：违规词、超长标题（>200字符）、图上徽章、EPA/商标侵权词先清掉。不能为了「SEO 检索」把违禁词留在 PDP。
 2. **第二层：事实一致性与降低 INAD（Consistency）**：尺寸、变体、节点、ALT、ST、数字、价格、串色、夸大词、A+ 与子体完全一致。自相矛盾会导致多退货、少展示，再反向压制自然位。
-3. **第三层：AI 发现栈（Discovery Stack）**：
-   - **Lexical retrieval（A9/A10 候选集召回）**：标题、五点、ST 把核心同义词自然出现一次，进入搜索候选集。不连写、不堆砌、不抄标题进 ST。
+3. **第三层：AI 发现栈与转化引擎（Discovery & Conversion Stack）**：
+   - **Lexical retrieval（A9/A10 候选集召回）**：标题（60-80 字符黄金区 + 80-180 字符长尾区）、五点、ST 把核心同义词自然出现一次，进入搜索候选集。不连写、不堆砌、不抄标题进 ST。
    - **COSMO（买家意图常识图谱）**：关心 who / where / when / 解决什么问题 / 场合 / 和什么搭配用。优先填满 `intended_use`、`target_audience`、`occasion`、`item_type` 等 discovery 属性。
-   - **Rufus / Alexa for Shopping（可引用事实闭环）**：提供可直接引用的权威事实。数字和分类走属性栏；五点回答买家核心疑问；A+ 正文与对比表提供深度说明；ALT 提供多模态图像检索源。**空属性 = 助手无法回答 = 买家问答时推荐竞品**。
+   - **Rufus / Alexa for Shopping（可引用事实闭环与 CVR 转化）**：提供可直接引用的权威事实。数字和分类走属性栏；五点回答买家核心疑问；A+ 正文与对比表提供深度说明；ALT 提供多模态图像检索源。**空属性 = 助手无法回答 = 买家问答时推荐竞品**。
 
 ---
 
-## 各字段在发现层的写法
+## 各字段在发现层与转化层的写法
 
-- **标题**：`品牌 + 品类 + 1–2 个已验证核心规格 + 变体词`。75 字符（推荐）或类目安全长度内完成，拒绝关键词堆砌。变体词固定放末尾。
-- **Item highlights**：标题装不下的材料、场景、配件短语（≤125 字符，逗号短语）。若类目模板无此字段，前置合并入五点。
-- **五点（Bullet Points）**：一条一个买家核心问题，提供权威事实：
+- **标题（CTR 命脉 + 搜索召回）**：
+  - **前 60–80 字符**：`[品牌] + [核心品类词] + [核心规格/参数] + [关键卖点]`。在移动端搜索折叠前完成心智闭环，锁定 **点击率（CTR）**。
+  - **80–180 字符**：容纳高权重长尾搜索词与末尾变体词，满足 A9/COSMO 自然搜索召回。
+- **Item highlights（移动端 CVR 核心）**：标题装不下的材料、场景、配件短语（≤125 字符，逗号短语）。买家 3 秒速读确认购买意图。若类目模板无此字段，前置合并入五点。
+- **五点（Bullet Points，对齐 2024 年 8 月 15 日新规）**：一条一个买家核心问题，提供权威事实（末尾不加句号，无违禁符号）：
   1. *是什么 / 给谁用* (`Used_For_Audience` + `Is_A`)
-  2. *可测量规格事实* (`Capable_Of` / 属性直接引用)
-  3. *核心功能与解决的痛点* (`Used_For_Func` / `Used_To`)
-  4. *使用场景或场合* (`Used_In_Loc` / `Used_For_Event`)
-  5. *箱内配件与使用边界* (`Used_With` + 降低 INAD 退货)
+  2. *可测量规格事实* (`Capable_Of` / 属性直接引用，消除退货风险)
+  3. *核心功能与解决的痛点* (`Used_For_Func` / `Used_To`，激发购买欲望)
+  4. *使用场景或场合* (`Used_In_Loc` / `Used_For_Event`，COSMO 意图对齐)
+  5. *箱内配件与使用边界* (`Used_With` + 降低 INAD 退货，明确边界)
 - **属性（Attributes）**：**优先级高于改写 Search Terms**。填满该类目的 discovery 字段：`item_type`、`intended_use`、`target_audience`、`occasion`、`material`、`capacity/size`、`included_components`、`care_instructions`、`compatibility`。数字必须全 Listing 统一口径。
 - **A+ 页面**：当成产品知识库，而不是纯海报。正文、对比表、FAQ、图上文字（会被 OCR 识别）、ALT 必须全部为真。
-- **Search Terms**：只补前台未出现的真实同义词与长尾意图词，严禁品牌、ASIN、重复词。
+- **Search Terms**：严格 < 250 字节，只补前台未出现的真实同义词与长尾意图词，严禁品牌、ASIN、重复词。
 
 ---
 
