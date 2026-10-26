@@ -138,3 +138,32 @@ feed_product_type	item_sku	external_product_id	external_product_id_type	item_nam
 - **收录**：前台标题、五点、属性中未出现的真实同义词、次要场景词、原料/材质长尾词。
 - **剔除**：自身品牌、竞品品牌、ASIN、标题/五点已有词、夸大词、warranty。
 - 代码块只有那一行干净的小写词，字节数标在思考区。用脚本严格核验字节。
+
+
+---
+
+## 批量上传表格（Flat Table TSV）与 PartialUpdate 安全准则
+
+为便于运营团队直接在卖家中心（Seller Central -> Catalog -> Add Products via Upload）进行批量刷新，交付报告必须提供符合官方模板规范的 TSV（Tab-Separated Values）纯文本平铺表格。
+
+### 1. `update_delete = PartialUpdate` 铁律（防数据被清空）
+- **核心风险**：在亚马逊 Inventory Loader 或 Category Specific Flat File 中，`update_delete` 字段若为空或误填为 `Update`，亚马逊系统将把当前表格中留空的所有字段（如未上传的副图 URL、历史属性、合规认证信息等）**判定为删除并直接全量清空覆盖**！
+- **强制规范**：**所有用于优化刷新的 Flat Table 表格，`update_delete` 列必须 100% 显式填写 `PartialUpdate`**。这确保系统仅更新表格中填写的标题、五点、属性、ST 等目标字段，其余后台已有资产不受任何影响。
+
+### 2. 变体父子层级结构（Parent-Child Variation Structure）
+对于多变体 Listing，平铺表格必须完整呈现父体行与子体行：
+- **父体行（Parent Row）**：
+  - `parent_child`: `Parent`
+  - `parent_sku`: [留空]
+  - `relationship_type`: [留空]
+  - `variation_theme`: 如 `ColorName`、`SizeName` 或 `ColorName-SizeName`
+  - 父体不填具体价格、条形码与尺寸规格，但可带共用的父体标题与五点。
+- **子体行（Child Rows）**：
+  - `parent_child`: `Child`
+  - `parent_sku`: 填入父体 SKU
+  - `relationship_type`: `Variation`
+  - `variation_theme`: 与父体保持完全一致
+  - 填入对应子体的专用变体属性（如 `color_name`、`size_name`）、条码、独立标题与图片。
+
+### 3. 表格代码块格式
+在报告中以 ```tsv 代码块提供，首行为标准表头，后续每行以 Tab 键（`\t`）分隔字段，运营可一键复制并粘贴至 Excel 或另存为 UTF-8 文本文件直接上传。

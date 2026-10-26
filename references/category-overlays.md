@@ -83,4 +83,22 @@
 - 宣称陷阱：减肥保证、专业训练效果、防水等级无测试
 - ST 陷阱：竞品运动品牌、医疗康复词（除非有依据且政策允许）
 
+## automotive-parts-accessories
+
+匹配：汽车配件、绞盘绳/拖车绳、车载应急装备、车灯、脚垫、改装外饰。
+
+- 必须一致：适配车型年份与底盘（Vehicle Fitment / Amazon PartFinder 口径）、破断强力与安全工作负荷（MBS vs WLL 必须清晰区分，严禁混淆）、线径/长度、材质（如 UHMWPE 超高分子量聚乙烯 / 锻造合金钢）、电压与流明（车灯）
+- 变体陷阱：不同承重级别或线径用了同一张破断强力示意图；适用车型清单图挂错子体
+- 宣称陷阱：未获第三方检测报告宣称 DOT / SAE / CE 认证；indestructible / unbreakable 等绝对化不坏承诺；直接把 OEM 品牌写成主语（如 "Jeep Winch" 侵权，必须写 "Winch Rope Compatible with Jeep"）
+- ST 陷阱：竞品汽配品牌名、裸写 OEM 汽车品牌名（如 ford jeep 直接塞入 ST）、与本品无关的车型发动机代号
+
+## pet-supplies
+
+匹配：宠物用品、智能喂食器、牵引绳、宠物窝垫、玩具、梳理洗护。
+
+- 必须一致：适用犬种体型与体重区间（Pet Weight / Sizing Guide）、喂食容量（L / Cups / g）、材质（食品级不锈钢 / BPA-Free 塑料 / 耐磨牛津布）、清洗保养方式
+- 变体陷阱：不同尺码子体共用一张未标具体尺寸的场景图；颜色款实图与色名串色
+- 宣称陷阱：indestructible / 100% chew-proof（极度容易因买家大狗咬坏触发 INAD 退货与差评）；flea & tick repellent / 杀跳蚤杀虫（未经 EPA 登记直接触发杀菌农药停售）；cure anxiety / heal skin（医疗治愈疾病声称触发 FDA 违规）；vet recommended（无兽医权威背书证据）
+- ST 陷阱：处方兽药名、竞品宠物品牌、EPA 违规杀虫词
+
 如何选择：看叶子类目和主图，不看卖家自称。一件“瑜伽垫”不要因为 A+ 写了 kitchen 就去读 kitchen 节。

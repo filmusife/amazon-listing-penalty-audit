@@ -27,7 +27,7 @@
 - **品牌名称**：{Brand}
 - **父体 / 变体结构**：Parent ASIN `{PARENT_ASIN}`，共 `{COUNT}` 个子变体（{Theme: Color / Size}）
 - **适用品类 Overlay**：`{Category Overlay}`（说明选该品类的依据）
-- **政策底线校验（Seller Central）**：{拉取成功 / 快照生效}；是否存在保修违规、EPA 杀菌词、注册商标侵权词或未认证环保词。
+- **政策底线校验（Seller Central）**：{拉取成功 / 快照生效}；是否存在保修违规、EPA 杀菌词、FDA 违规医疗词、注册商标侵权词或未认证环保词。
 
 ---
 
@@ -77,7 +77,19 @@
 
 ---
 
-## 6. Rufus 模拟问答压力测试（5 组 QA 审计）
+## 6. Rufus 事实就绪度评分与模拟问答压力测试
+
+### 6.1 Rufus 事实就绪度评分卡（Rufus Fact Readiness: {FACT_SCORE} / 100）
+
+| 事实评价维度 | 满分 | 诊断前得分 | 优化后得分 | 关键赋能动作与事实闭环证据 |
+|---|---|---|---|---|
+| **显式规格事实覆盖度** | 25 分 | 10 分 | 25 分 | 统一物理容量（70g）、功率（200W）、材质（304不锈钢），填满后台属性 |
+| **负向边界与退货防御度** | 25 分 | 5 分 | 25 分 | 明确干磨限制、机身不可水洗边界，阻断误用差评与退货 |
+| **场景与兼容性映射度** | 25 分 | 10 分 | 25 分 | 明确 `intended_use`（咖啡豆/干香料）、`target_audience`（家庭咖啡爱好者） |
+| **问答截流与差异化优势** | 25 分 | 5 分 | 23 分 | 提供 63dB 低噪实测、食品级材质认证，支持 AI 主动向买家背书推荐 |
+| **合计就绪度总分** | 100 分 | **30 分（信息盲区）** | **98 分（AI优先推荐）** | 打通 Rufus 事实链条，形成闭环回答能力 |
+
+### 6.2 Rufus 模拟问答压力测试（5 组 QA 审计）
 
 | 模拟买家提问 | 修改前 PDP 表现 | 修改后 PDP 表现 | Rufus 引用依据 |
 |---|---|---|---|
@@ -160,18 +172,25 @@ A+2: SHARDOR coffee grinder 70 gram bowl with roasted coffee beans and measuring
 
 ## 8. 亚马逊标准平铺表格（Flat Table / TSV 批量导入格式）
 
-针对多变体批量修改，可直接整段复制以下 TSV 内容，粘贴导入官方批量上传模板（Inventory Loader / Category Flat File）：
+针对多变体批量修改，可直接整段复制以下 TSV 内容，粘贴导入官方批量上传模板（Inventory Loader / Category Flat File）。
+
+> [!IMPORTANT]
+> `update_delete` 必须显式填入 `PartialUpdate`！严禁留空或填 `Update`，否则未提供的空白属性将被亚马逊系统全量清空覆盖！
 
 ```tsv
-feed_product_type	item_sku	external_product_id	external_product_id_type	item_name	item_highlights1	bullet_point1	bullet_point2	bullet_point3	bullet_point4	bullet_point5	generic_keywords	item_dimensions
-kitchen	SKU-BLUE-01	B0XXXXXXXX	ASIN	SHARDOR Electric Coffee Grinder, 70g Capacity, Stainless Steel Blade, Blue	70g capacity, One-touch grind	Target Audience: Tailored for coffee lovers and home baristas who want quick fresh grounds	Precise 70g Capacity: Grinds up to 70 grams of fresh coffee beans yielding 3 to 4 cups	One-Touch Operation: Push-down lid activates stainless steel dual blades instantly	Multi-Purpose Kitchen Tool: Easily pulverizes dry spices, herbs, nuts, and seeds	Package & Maintenance: Includes 1 electric grinder, 1 cleaning brush, and 1 user manual	electric spice herb seed chopping blade	4.7"L x 4.7"W x 6.77"H
-kitchen	SKU-BLACK-01	B0YYYYYYYY	ASIN	SHARDOR Electric Coffee Grinder, 70g Capacity, Stainless Steel Blade, Black	70g capacity, One-touch grind	Target Audience: Tailored for coffee lovers and home baristas who want quick fresh grounds	Precise 70g Capacity: Grinds up to 70 grams of fresh coffee beans yielding 3 to 4 cups	One-Touch Operation: Push-down lid activates stainless steel dual blades instantly	Multi-Purpose Kitchen Tool: Easily pulverizes dry spices, herbs, nuts, and seeds	Package & Maintenance: Includes 1 electric grinder, 1 cleaning brush, and 1 user manual	electric spice herb seed chopping blade	4.7"L x 4.7"W x 6.77"H
+feed_product_type	item_sku	update_delete	external_product_id	external_product_id_type	item_name	brand_name	parent_child	parent_sku	relationship_type	variation_theme	color_name	item_highlights1	bullet_point1	bullet_point2	bullet_point3	bullet_point4	bullet_point5	generic_keywords	item_dimensions	material	included_components
+kitchen	PARENT-SKU-01	PartialUpdate			SHARDOR Electric Coffee Grinder 70g Capacity	SHARDOR	Parent			ColorName		70g capacity, One-touch grind	Target Audience: Tailored for coffee lovers and home baristas who want quick fresh grounds	Precise 70g Capacity: Grinds up to 70 grams of fresh coffee beans yielding 3 to 4 cups	One-Touch Operation: Push-down lid activates stainless steel dual blades instantly	Multi-Purpose Kitchen Tool: Easily pulverizes dry spices, herbs, nuts, and seeds	Package & Maintenance: Includes 1 electric grinder, 1 cleaning brush, and 1 user manual	electric spice herb seed chopping blade	4.7"L x 4.7"W x 6.77"H	304 Stainless Steel	Coffee Grinder, Cleaning Brush, User Manual
+kitchen	SKU-BLUE-01	PartialUpdate	B0XXXXXXXX	ASIN	SHARDOR Electric Coffee Grinder, 70g Capacity, Stainless Steel Blade, Blue	SHARDOR	Child	PARENT-SKU-01	Variation	ColorName	Blue	70g capacity, One-touch grind	Target Audience: Tailored for coffee lovers and home baristas who want quick fresh grounds	Precise 70g Capacity: Grinds up to 70 grams of fresh coffee beans yielding 3 to 4 cups	One-Touch Operation: Push-down lid activates stainless steel dual blades instantly	Multi-Purpose Kitchen Tool: Easily pulverizes dry spices, herbs, nuts, and seeds	Package & Maintenance: Includes 1 electric grinder, 1 cleaning brush, and 1 user manual	electric spice herb seed chopping blade	4.7"L x 4.7"W x 6.77"H	304 Stainless Steel	Coffee Grinder, Cleaning Brush, User Manual
+kitchen	SKU-BLACK-01	PartialUpdate	B0YYYYYYYY	ASIN	SHARDOR Electric Coffee Grinder, 70g Capacity, Stainless Steel Blade, Black	SHARDOR	Child	PARENT-SKU-01	Variation	ColorName	Black	70g capacity, One-touch grind	Target Audience: Tailored for coffee lovers and home baristas who want quick fresh grounds	Precise 70g Capacity: Grinds up to 70 grams of fresh coffee beans yielding 3 to 4 cups	One-Touch Operation: Push-down lid activates stainless steel dual blades instantly	Multi-Purpose Kitchen Tool: Easily pulverizes dry spices, herbs, nuts, and seeds	Package & Maintenance: Includes 1 electric grinder, 1 cleaning brush, and 1 user manual	electric spice herb seed chopping blade	4.7"L x 4.7"W x 6.77"H	304 Stainless Steel	Coffee Grinder, Cleaning Brush, User Manual
 ```
 
 ---
 
-## 9. 执行工单与分步实施路线
-- **Day 1（安全底座与防退货）**：更新后台 Attributes 属性栏与 A+ 规格数字，消除数据矛盾，阻断 INAD 退货；
-- **Day 2（CTR/CVR 增长文本上线）**：批量更新标题（前置品牌与品类）、Item highlights、五点描述（合规无句号无符号）、ST、图库与 A+ ALT（严格 ≤ 100 字符）；
-- **Day 3（视觉物料优化）**：美工安排替换图库中串色的子体图、下掉主图/附图上的违规保修徽章，校准主图白底与质感。
+## 9. 团队协同落地：基于角色的 3 天执行看板（Role-Based Execution Kanban）
+
+| 时间进度 | 运营岗（Operations） | 文案/SEO岗（Copywriting） | 视觉美工岗（Visual Design） |
+|---|---|---|---|
+| **Day 1: 安全底座与防退货** | 导出后台库存模板；核对并填满 Attributes 规格字段；提交 `update_delete = PartialUpdate` 刷新，消除前后端数据冲突。 | 整理全子体统一规格口径；提取各子体独立 `color_name` / `size_name`；剔除 Search Terms 中的 ASIN 与竞品词。 | 排查主图是否满足纯白底（RGB 255, 255, 255）与产品占比 ≥ 85%；下架所有含 warranty、guarantee 的宣传徽章图。 |
+| **Day 2: CTR/CVR 增长上线** | 登录卖家中心 A+ 管理器与商品编辑页面；分批更新标题、Item highlights、五点描述；更新后台通用关键词（ST < 250 字节）。 | 按照移动端前 65 字符黄金区公式校准全子体标题；核对五点 2024 新规（无句号/无禁用符号）；提交每张 ≤ 100 字符的 A+ ALT。 | 解决跨变体图片串色与错配，核验每个子体图库第 1-7 张实图与色卡一一对应；完成信息图上的文字 OCR 纠偏（消灭拼写与数字错误）。 |
+| **Day 3: 监控与事实闭环** | 检查后台是否报错；验证前台搜索展现与移动端折叠呈现；在手机端测试 Rufus 问答，核验 5 组模拟问题是否能精准回答。 | 追踪各核心关键词的自然搜索排名与展示量（Impression）；对比改前改后 CTR 转化数据波动。 | 备份全套合规图库源文件；根据前台展现效果做进一步高对比度与移动端视网膜屏细节微调。 |
 ```

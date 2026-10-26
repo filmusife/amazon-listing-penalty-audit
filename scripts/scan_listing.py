@@ -108,6 +108,17 @@ EPA_PESTICIDE_PATTERNS = [
     (r"\bsteriliz(?:e|ing|er|ation)\b", "sterilizer (EPA/medical claim trigger)"),
 ]
 
+# High-risk FDA medical claims & disease claims (causes immediate ASIN takedown / restricted product flag)
+FDA_MEDICAL_PATTERNS = [
+    (r"\bfda[-\s]?approved\b", "FDA approved (unsubstantiated medical/drug claim trigger)"),
+    (r"\b(?:cure|cures|curing)\b", "disease cure claim (FDA/medical trigger)"),
+    (r"\b(?:treat|treats|treating|treatment)\s+(?:of\s+)?(?:arthritis|disease|cancer|diabetes|pain|infection|illness|acne|eczema)\b", "disease treatment claim (FDA trigger)"),
+    (r"\banti-?inflammatory\b", "anti-inflammatory (unapproved medical claim trigger)"),
+    (r"\bweight[-\s]?loss\s+guarantee\b", "weight loss guarantee (FTC/FDA trigger)"),
+    (r"\b(?:heal|heals|healing)\s+(?:wounds?|diseases?|illness)\b", "medical healing claim"),
+    (r"\bpain[-\s]?relie(?:f|ve|ving)\b", "pain relief claim (unapproved medical claim trigger)"),
+]
+
 # High-risk registered trademark traps that cause automated IP infringement takedowns
 TRADEMARK_PATTERNS = [
     (r"\bvelcro\b", "Velcro (use 'hook and loop' instead)"),
@@ -122,6 +133,13 @@ TRADEMARK_PATTERNS = [
     (r"\bcrock-?pots?\b", "Crock-Pot (use 'slow cooker' instead)"),
     (r"\bziplocs?\b", "Ziploc (use 'zipper storage bag' instead)"),
     (r"\bq-?tips?\b", "Q-tips (use 'cotton swabs' instead)"),
+]
+
+# High-risk FTC textile labeling traps (e.g. Bamboo vs Rayon/Viscose)
+FTC_BAMBOO_PATTERNS = [
+    (r"\b100\s*%\s*(?:pure\s+)?bamboo(?!\s+(?:wood|cutting\s+board|handle|utensil|furniture|fiber\s+blend))\b", "100% bamboo textile claim (FTC requires 'rayon from bamboo')"),
+    (r"\bpure\s+bamboo(?!\s+(?:wood|cutting\s+board|handle|utensil|furniture))\b", "pure bamboo textile claim (FTC violation)"),
+    (r"\b100\s*%\s*organic\s+bamboo\b", "100% organic bamboo textile claim (FTC violation)"),
 ]
 
 MARKETPLACES = {
@@ -294,12 +312,18 @@ def calculate_health_score(result: dict[str, Any]) -> dict[str, Any]:
     if result.get("epa_pesticide_claims"):
         score -= 20
         deductions.append({"issue": "EPA/FIFRA 未申报杀菌/农药高危词 (面临整条商品下架风险)", "points": -20})
+    if result.get("fda_medical_claims"):
+        score -= 20
+        deductions.append({"issue": "FDA/违规医疗与疾病声称 (面临下架及限制销售高危风险)", "points": -20})
     if result.get("trademark_violations"):
         score -= 20
         deductions.append({"issue": "注册商标侵权风险 (如 Velcro, Thermos 等通用化误用)", "points": -20})
     if "TITLE_OVER_HARD_LIMIT" in result.get("flags", []):
         score -= 20
         deductions.append({"issue": f"标题超过亚马逊官方硬性上限 (>{TITLE_HARD_MAX_CHARS}字符，直接被搜索抑制)", "points": -20})
+    if result.get("ftc_bamboo_claims"):
+        score -= 10
+        deductions.append({"issue": "FTC 纺织品竹纤维违规标示 (未按规定标注'rayon/viscose from bamboo')", "points": -10})
     if "ST_CONTAINS_ASIN" in result.get("flags", []):
         score -= 15
         deductions.append({"issue": "Search Terms 违规填入 ASIN", "points": -15})
@@ -507,7 +531,9 @@ def scan(payload: dict[str, Any]) -> dict[str, Any]:
     pdp_prohibited = _find_patterns(pdp_text, PROHIBITED_PATTERNS)
     st_prohibited = _find_patterns(search_terms, PROHIBITED_PATTERNS)
     epa_claims = _find_patterns(pdp_text, EPA_PESTICIDE_PATTERNS)
+    fda_claims = _find_patterns(pdp_text, FDA_MEDICAL_PATTERNS)
     trademark_hits = _find_patterns(pdp_text, TRADEMARK_PATTERNS)
+    ftc_bamboo_hits = _find_patterns(pdp_text, FTC_BAMBOO_PATTERNS)
 
     result = {
         "marketplace": marketplace,
@@ -546,7 +572,9 @@ def scan(payload: dict[str, Any]) -> dict[str, Any]:
         },
         "pdp_prohibited": pdp_prohibited,
         "epa_pesticide_claims": epa_claims,
+        "fda_medical_claims": fda_claims,
         "trademark_violations": trademark_hits,
+        "ftc_bamboo_claims": ftc_bamboo_hits,
         "alt_issues": alt_issues,
         "aplus_alt_issues": aplus_alt_issues,
         "dimensions_3d": [f"{d[0]}x{d[1]}x{d[2]} {d[3]}" for d in dims_3d],
@@ -592,8 +620,12 @@ def scan(payload: dict[str, Any]) -> dict[str, Any]:
         flags.append("PDP_PROHIBITED_TERM")
     if result["epa_pesticide_claims"]:
         flags.append("EPA_PESTICIDE_CLAIM")
+    if result["fda_medical_claims"]:
+        flags.append("FDA_MEDICAL_CLAIM")
     if result["trademark_violations"]:
         flags.append("TRADEMARK_VIOLATION")
+    if result["ftc_bamboo_claims"]:
+        flags.append("FTC_BAMBOO_CLAIM")
 
     if any(item.get("wrong_language") for item in alt_issues):
         flags.append("ALT_WRONG_LANGUAGE")
@@ -617,9 +649,171 @@ def scan(payload: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def parse_html_pdp(html_content: str) -> dict[str, Any]:
+    """Parse raw Amazon PDP HTML into a structured listing audit payload.
+
+    Extracts #productTitle, brand (#bylineInfo), feature bullets, attributes,
+    gallery image ALTs, and A+ content image ALTs.
+    """
+    try:
+        from bs4 import BeautifulSoup
+    except ImportError:
+        raise SystemExit("BeautifulSoup4 (bs4) is required for --html parsing. Install with: pip install beautifulsoup4")
+
+    soup = BeautifulSoup(html_content, "html.parser")
+
+    # 1. Product Title (#productTitle)
+    title = ""
+    title_elem = soup.find("span", id="productTitle")
+    if title_elem:
+        title = title_elem.get_text(strip=True)
+    elif soup.title:
+        raw_t = soup.title.get_text(strip=True)
+        if raw_t.startswith("Amazon.com:"):
+            raw_t = raw_t[len("Amazon.com:"):].strip()
+        title = raw_t
+
+    # 2. Brand Name (#bylineInfo, #brand, or overview table)
+    brand = ""
+    byline = soup.find(id="bylineInfo")
+    if byline:
+        b_text = byline.get_text(strip=True)
+        m = re.search(r"(?:Visit the|Brand:)\s*([A-Za-z0-9\s\-&]+?)(?:\s*Store|$)", b_text, re.I)
+        brand = m.group(1).strip() if m else b_text
+    if not brand:
+        brand_elem = soup.find("a", id="brand")
+        if brand_elem:
+            brand = brand_elem.get_text(strip=True)
+
+    # 3. Bullets (#feature-bullets)
+    bullets: list[str] = []
+    bullet_div = soup.find(id="feature-bullets")
+    if bullet_div:
+        for span in bullet_div.find_all("span", class_="a-list-item"):
+            b_text = span.get_text(strip=True)
+            if b_text and not b_text.startswith("Make sure this fits") and not b_text.startswith("P.when"):
+                bullets.append(b_text)
+
+    # 4. Attributes (#productOverview_feature_div & tech spec table)
+    attributes: dict[str, str] = {}
+    overview_div = soup.find(id="productOverview_feature_div")
+    if overview_div:
+        for tr in overview_div.find_all("tr"):
+            th = tr.find(["th", "td"], class_=re.compile(r"a-color-secondary|a-span3"))
+            td = tr.find("td", class_=re.compile(r"a-span9"))
+            if th and td:
+                k = th.get_text(strip=True).rstrip(":")
+                v = td.get_text(strip=True)
+                if k and v:
+                    attributes[k] = v
+                    if k.lower() == "brand" and not brand:
+                        brand = v
+
+    tech_spec = soup.find(id=re.compile(r"technicalSpecifications|techSpec", re.I))
+    if tech_spec:
+        for tr in tech_spec.find_all("tr"):
+            th = tr.find(["th", "td"], class_=re.compile(r"label|a-color-secondary|prodDetSectionEntry", re.I))
+            td = tr.find("td", class_=re.compile(r"value|a-span9|prodDetAttrValue", re.I))
+            if th and td:
+                k = th.get_text(strip=True).rstrip(":")
+                v = td.get_text(strip=True)
+                if k and v and k not in attributes:
+                    attributes[k] = v
+
+    # 5. Gallery ALTs (#altImages)
+    alts: dict[str, str] = {}
+    alt_container = soup.find(id="altImages")
+    if alt_container:
+        img_idx = 0
+        for img in alt_container.find_all("img"):
+            alt_val = img.get("alt", "").strip()
+            # Exclude video or 360 spin icon alt
+            if any(skip in alt_val.lower() for skip in ["video", "360", "play"]):
+                continue
+            slot = "MAIN" if img_idx == 0 else f"PT{img_idx:02d}"
+            if alt_val:
+                alts[slot] = alt_val
+                img_idx += 1
+
+    # 6. A+ Content ALTs (#aplus, #aplus3p_feature_div, etc.)
+    aplus_alts: dict[str, str] = {}
+    aplus_containers = soup.find_all(id=re.compile(r"aplus|dpx-aplus", re.I))
+    a_idx = 1
+    for container in aplus_containers:
+        for img in container.find_all("img"):
+            alt_val = img.get("alt", "").strip()
+            src = img.get("src", "")
+            # Filter out transparent spacer / tracking 1x1 pixels
+            if "grey-pixel.gif" in src or "transparent-pixel.gif" in src:
+                continue
+            if alt_val:
+                aplus_alts[f"A+{a_idx}"] = alt_val
+                a_idx += 1
+
+    return {
+        "title": title,
+        "brand": brand,
+        "bullets": bullets,
+        "attributes": attributes,
+        "alts": alts,
+        "aplus_alts": aplus_alts,
+        "item_highlights": "",
+        "search_terms": "",
+    }
+
+
+def format_markdown_summary(result: dict[str, Any]) -> str:
+    """Format scan results into a concise, readable Markdown summary."""
+    health = result.get("health_score", {})
+    score = health.get("score", 100)
+    level_label = health.get("label", "N/A")
+    title_info = result.get("title", {})
+    clean_title = title_info.get("clean_title", "")
+    mobile_preview = title_info.get("mobile_preview", "")
+    brand_ok = title_info.get("brand_in_mobile_zone", False)
+
+    lines = []
+    lines.append(f"# Listing Audit Deterministic Scan Summary")
+    lines.append("")
+    lines.append(f"- **Health Score**: `{score} / 100` ({level_label})")
+    lines.append(f"- **Marketplace**: `{result.get('marketplace', 'US')}`")
+    lines.append(f"- **Clean Title Length**: `{title_info.get('chars', 0)}` chars (Safe Indexing Zone: {title_info.get('safe_indexing_zone')})")
+    lines.append(f"- **Mobile CTR Golden Zone (~65 chars)**: `{mobile_preview}` (Brand Visible: {'✅ YES' if brand_ok else '❌ NO - CTR Risk'})")
+
+    del_info = title_info.get("delimiter_info", {})
+    if del_info.get("has_crawler_delimiter"):
+        lines.append(f"- **Data Sanitization**: ⚠️ Filtered crawler delimiter `{del_info.get('delimiter_type')}` ({len(del_info.get('raw_segments', []))} segments decoupled, no false deduction)")
+
+    lines.append("")
+    lines.append("## Deductions & Violations")
+    deductions = health.get("deductions", [])
+    if not deductions:
+        lines.append("- ✅ No policy deductions detected. Listing is compliant.")
+    else:
+        for d in deductions:
+            lines.append(f"- **{d['points']} pts**: {d['issue']}")
+
+    lines.append("")
+    lines.append("## Key Findings")
+    lines.append(f"- **Prohibited Marketing Terms**: {len(result.get('pdp_prohibited', []))} found")
+    lines.append(f"- **EPA/FIFRA Pesticide Claims**: {len(result.get('epa_pesticide_claims', []))} found")
+    lines.append(f"- **FDA/Medical Claims**: {len(result.get('fda_medical_claims', []))} found")
+    lines.append(f"- **Trademark Violations**: {len(result.get('trademark_violations', []))} found")
+    lines.append(f"- **FTC Bamboo Violations**: {len(result.get('ftc_bamboo_claims', []))} found")
+    lines.append(f"- **Measurement Conflicts**: {'⚠️ Yes' if result.get('measurement_conflicts') else '✅ None'}")
+    lines.append(f"- **Bullet Issues (2024 Rules)**: {len(result.get('bullets', {}).get('issues', []))} items flagged")
+    lines.append(f"- **A+ ALT Over Limits (>100 chars)**: {len([a for a in result.get('aplus_alt_issues', []) if a.get('over_limit')])} images")
+
+    lines.append("")
+    lines.append(f"- **Active Flags**: `{', '.join(result.get('flags', [])) or 'None'}`")
+    return "\n".join(lines)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Scan extracted Amazon listing fields against Seller Central rules")
     parser.add_argument("--input", help="JSON file; omit to read stdin when piped")
+    parser.add_argument("--html", help="Raw Amazon PDP HTML file to extract and scan")
+    parser.add_argument("--format", choices=["json", "summary"], default="json", help="Output format: json (default) or summary")
     parser.add_argument("--marketplace", default="US")
     parser.add_argument("--brand", default="")
     parser.add_argument("--title", default="")
@@ -633,24 +827,53 @@ def parse_args() -> argparse.Namespace:
 
 
 def payload_from_args(args: argparse.Namespace) -> dict[str, Any]:
+    if args.html:
+        html_content = PathRead(args.html)
+        payload = parse_html_pdp(html_content)
+        if args.marketplace:
+            payload["marketplace"] = args.marketplace
+        if args.brand:
+            payload["brand"] = args.brand
+        if args.title:
+            payload["title"] = args.title
+        if args.highlights:
+            payload["item_highlights"] = args.highlights
+        if args.st:
+            payload["search_terms"] = args.st
+        if args.bullet:
+            payload["bullets"] = args.bullet
+        return payload
     if args.input:
+        if args.input == "-":
+            return json.loads(sys.stdin.read().strip())
         return json.loads(PathRead(args.input))
+    if any([args.title, args.bullet, args.brand, args.highlights, args.st, args.alt, args.aplus_alt]):
+        alts = {}
+        for item in args.alt:
+            if ":" not in item:
+                raise SystemExit(f"ALT must be key:value, got {item!r}")
+            key, value = item.split(":", 1)
+            alts[key] = value
+        aplus_alts = {}
+        for item in args.aplus_alt:
+            if ":" not in item:
+                raise SystemExit(f"A+ ALT must be key:value, got {item!r}")
+            key, value = item.split(":", 1)
+            aplus_alts[key] = value
+        return {
+            "marketplace": args.marketplace,
+            "brand": args.brand,
+            "title": args.title,
+            "item_highlights": args.highlights,
+            "bullets": args.bullet,
+            "search_terms": args.st,
+            "alts": alts,
+            "aplus_alts": aplus_alts,
+        }
     if not sys.stdin.isatty():
         raw = sys.stdin.read().strip()
         if raw:
             return json.loads(raw)
-    alts = {}
-    for item in args.alt:
-        if ":" not in item:
-            raise SystemExit(f"ALT must be key:value, got {item!r}")
-        key, value = item.split(":", 1)
-        alts[key] = value
-    aplus_alts = {}
-    for item in args.aplus_alt:
-        if ":" not in item:
-            raise SystemExit(f"A+ ALT must be key:value, got {item!r}")
-        key, value = item.split(":", 1)
-        aplus_alts[key] = value
     return {
         "marketplace": args.marketplace,
         "brand": args.brand,
@@ -658,8 +881,8 @@ def payload_from_args(args: argparse.Namespace) -> dict[str, Any]:
         "item_highlights": args.highlights,
         "bullets": args.bullet,
         "search_terms": args.st,
-        "alts": alts,
-        "aplus_alts": aplus_alts,
+        "alts": {},
+        "aplus_alts": {},
     }
 
 
@@ -789,6 +1012,77 @@ def self_test() -> int:
     assert "BULLET_ENDS_WITH_PERIOD" in banned_bullet_item["flags"]
     assert any("2024官方违禁特殊符号" in d["issue"] for d in banned_bullet_item["health_score"]["deductions"])
 
+    # 8. Test FDA medical claims and disease treatment
+    medical_item = scan(
+        {
+            "marketplace": "US",
+            "title": "Brand Red Light Therapy Belt, FDA Approved",
+            "bullets": ["Treats arthritis pain effectively and reduces swelling", "Provides fast pain relief"],
+        }
+    )
+    assert "FDA_MEDICAL_CLAIM" in medical_item["flags"]
+    assert len(medical_item["fda_medical_claims"]) >= 2
+    assert any("FDA/违规医疗与疾病声称" in d["issue"] for d in medical_item["health_score"]["deductions"])
+    assert medical_item["health_score"]["score"] <= 80
+
+    # 9. Test FTC bamboo textile claim
+    bamboo_item = scan(
+        {
+            "marketplace": "US",
+            "title": "Brand 100% Bamboo Bed Sheet Set, Queen, White",
+            "bullets": ["Pure bamboo cooling sheets for hot sleepers"],
+        }
+    )
+    assert "FTC_BAMBOO_CLAIM" in bamboo_item["flags"]
+    assert any("FTC 纺织品竹纤维违规标示" in d["issue"] for d in bamboo_item["health_score"]["deductions"])
+
+    # 10. Test native HTML PDP parsing
+    mock_html = """
+    <html>
+      <head><title>Amazon.com: Brand Espresso Coffee Machine 20 Bar Stainless Steel</title></head>
+      <body>
+        <span id="productTitle">Brand Espresso Machine, 20 Bar Stainless Steel Compact Maker</span>
+        <a id="bylineInfo">Visit the Brand Store</a>
+        <div id="feature-bullets">
+          <ul class="a-unordered-list">
+            <li><span class="a-list-item">Powerful 20 bar professional pump</span></li>
+            <li><span class="a-list-item">Includes milk frother wand</span></li>
+          </ul>
+        </div>
+        <div id="productOverview_feature_div">
+          <table>
+            <tr><th class="a-color-secondary">Capacity</th><td class="a-span9">1.5 Liters</td></tr>
+            <tr><th class="a-color-secondary">Color</th><td class="a-span9">Silver</td></tr>
+          </table>
+        </div>
+        <div id="altImages">
+          <ul>
+            <li><img alt="Brand espresso machine front view silver" src="front.jpg"/></li>
+            <li><img alt="Brand espresso machine frother steam wand detail" src="wand.jpg"/></li>
+          </ul>
+        </div>
+        <div id="aplus">
+          <img alt="Brand espresso maker pressure gauge feature" src="gauge.jpg"/>
+        </div>
+      </body>
+    </html>
+    """
+    parsed_payload = parse_html_pdp(mock_html)
+    assert parsed_payload["title"] == "Brand Espresso Machine, 20 Bar Stainless Steel Compact Maker"
+    assert parsed_payload["brand"] == "Brand"
+    assert len(parsed_payload["bullets"]) == 2
+    assert parsed_payload["attributes"].get("Capacity") == "1.5 Liters"
+    assert parsed_payload["alts"]["MAIN"] == "Brand espresso machine front view silver"
+    assert parsed_payload["aplus_alts"]["A+1"] == "Brand espresso maker pressure gauge feature"
+
+    html_scan_res = scan(parsed_payload)
+    assert html_scan_res["health_score"]["score"] == 100
+
+    # 11. Test format_markdown_summary
+    summary_md = format_markdown_summary(html_scan_res)
+    assert "Listing Audit Deterministic Scan Summary" in summary_md
+    assert "**Health Score**: `100 / 100`" in summary_md
+
     print("All enhanced Seller Central self-tests passed successfully!")
     return 0
 
@@ -800,8 +1094,12 @@ def main() -> int:
     if args.self_test:
         return self_test()
     payload = payload_from_args(args)
-    json.dump(scan(payload), sys.stdout, ensure_ascii=False, indent=2)
-    sys.stdout.write("\n")
+    result = scan(payload)
+    if args.format == "summary":
+        sys.stdout.write(format_markdown_summary(result) + "\n")
+    else:
+        json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
+        sys.stdout.write("\n")
     return 0
 
 

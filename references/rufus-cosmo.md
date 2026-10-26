@@ -65,3 +65,46 @@ Amazon 面向买家的购物助手（Rufus / Alexa for Shopping）核心检索�
    - *检验点*：能否给出权威明确的否定或肯定回答，防止买家错误使用导致退货。
 
 若某问题 PDP 无事实支撑，在报告中明确标出 `RUFUS_FACT_GAP`，提示卖家在属性或 A+ 中补充事实。
+
+
+---
+
+## COSMO 15 节点意图常识图谱全映射表
+
+COSMO 意图图谱通过买家真实行为数据训练，构建实体与生活场景的多跳关系。Listing 必须在文案中自然嵌入这些语义三元组，才能被常识图谱有效收录并主动推流：
+
+| # | COSMO 核心图谱关系 | 语义含义 | 最佳落地字段与文案承载规范 |
+|---|---|---|---|
+| 1 | `Is_A` | 产品本质类别 | 标题首部品类词、`item_type_keyword`（必须精准，严禁泛词） |
+| 2 | `Used_For_Audience` | 目标受众人群 | 属性 `target_audience`、五点 Bullet 1 开头 |
+| 3 | `Used_By` | 实际使用者/执行者 | 五点受众描述（如 "baristas, home cooks, beginners"） |
+| 4 | `Used_For_Func` | 核心功能机制 | 标题卖点、五点 Bullet 2/3（动词短语：grind, blend, steam） |
+| 5 | `Used_To` | 买家最终想要达成的目的 | 五点利益点（如 "brew fresh morning espresso, prepare baby puree"） |
+| 6 | `Capable_Of` | 机器/材质具备的硬性能力 | 属性参数（如 `capacity: 70g`, `power: 200W`, `noise: 63dB`） |
+| 7 | `Used_In_Loc` | 使用的具体物理空间 | 五点场景条、Item highlights（如 "kitchen countertop, RV, dorm"） |
+| 8 | `Used_For_Event` | 发生的生活事件/场合 | 属性 `occasion`、五点场景描述（如 "holiday gathering, camping trip"） |
+| 9 | `Used_With` | 搭配使用的工具/配件 | 属性 `included_components`、五点 Bullet 5（装箱配件清单） |
+| 10| `Used_On` | 作用的对象/食材/媒介 | 属性 `intended_use`、五点范围（如 "coffee beans, spices, dry nuts"） |
+| 11| `Made_Of` | 物理材质与工艺 | 属性 `material`、五点材质说明（如 "304 food-grade stainless steel"） |
+| 12| `Has_Property` | 关键物理特性 | 属性与 highlights（如 "compact, BPA-free, one-touch, detachable"） |
+| 13| `Requires` | 运行所需的前提条件 | 属性与五点（如 "120V outlet, hand wash, pre-soaking"） |
+| 14| `Prevents` | 能够预防的不良问题 | 五点痛点阻断（如 "prevents overheating, stops powder spillage"） |
+| 15| `Not_Used_For` | 明确的使用边界（防退货） | 五点 Bullet 5 与 A+ FAQ（如 "not for wet grinding, hand wipe only"） |
+
+---
+
+## Rufus 事实就绪度量化评分模型（Rufus Fact Readiness Score, 0–100）
+
+Rufus 等大语言模型购物助手的本质是**“基于可信事实的问答与推荐生成”**。如果 PDP 中只有口号而没有硬核事实，Rufus 在买家提问时将产生信息盲区或直接引用竞品。我们设立 4 个维度（各 25 分）量化评价 Listing 的事实就绪度：
+
+| 评估维度 | 分值 | 检验指标与得分标准 | 典型失分陷阱 |
+|---|---|---|---|
+| **1. 显式规格事实覆盖度 (Explicit Spec Coverage)** | 25 分 | 核心物理参数（容量、长宽高、材质、功率、电压）在后台 Attributes 与五点中均有明确单一文字口径，图文一致。得 20-25 分。 | 数字仅印在图片上、后台属性全空白、标题五点数字互相打架（得 0-10 分）。 |
+| **2. 负向边界与退货防御度 (Negative Scenario Defense)** | 25 分 | 明确标注清洗方式（机洗/手擦）、能否处理湿性食材、适用/不适用场景，前置消灭买家误用差评。得 20-25 分。 | 含糊其辞宣称“全能”，买家买回家发现无法机洗或烧毁电机怒打一星（得 0-10 分）。 |
+| **3. 场景与兼容性映射度 (Context & Compatibility)** | 25 分 | 准确填入 `intended_use`、`compatibility`、`target_audience`，形成闭环场景语义。得 20-25 分。 | 宣称“universal / fits all”却无具体型号对照，买家提问“能否用于我的车”时助手无法作答。 |
+| **4. 问答截流与差异化优势 (Q&A Interception & Edge)** | 25 分 | 具备明确对比事实（如噪音 dB 数值、BPA-Free 认证材质、可拆卸设计），支持助手向买家推荐本品。得 20-25 分。 | 纯空洞形容词（best, great, amazing），无任何第三方可验证事实支持推荐（得 0-10 分）。 |
+
+- **90–100 分（AI 优先推荐级）**：事实完备闭环，Rufus 拟真问答 5 组全部正面直接作答，推荐权重极高。
+- **75–89 分（合格支撑级）**：主要事实具备，个别使用边界待补充。
+- **50–74 分（事实欠缺级）**：属性栏大面积空白，主要依靠文本模糊推测，存在被竞品截流风险。
+- **0–49 分（信息盲区级）**：充斥夸大词与宣传口号，无结构化事实，AI 问答直接判定为不可靠来源。

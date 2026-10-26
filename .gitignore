@@ -1,3 +1,39 @@
+# Operating System
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors & IDEs
 *.swp
-.env
+*.swo
+*~
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+.venv/
+env/
+venv/
+
+# Scratch & Downloaded Assets
+images/
+images_*/
+aplus_*/
+data/
+*.html
+*.log
+*.txt
+*.json
+!references/input-template.json
+!agents/*.yaml
+
+# Temporary test scripts
+test_*.py
+scratch/
+
+# Generated Outputs
+outputs/

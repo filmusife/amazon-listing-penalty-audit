@@ -25,7 +25,10 @@
 - 夸大：best、#1、super silent、ultra quiet、100%（无证据）
 - 比较：better than、unlike other、或点名竞品
 - 促销：free shipping、hot item、best seller、coupon、limited time
-- 绿色/抗菌等无资质宣称：eco-friendly、anti-bacterial、anti-microbial
+- 绿色/抗菌等无资质宣称：eco-friendly、anti-bacterial、anti-microbial（触发 EPA 农药停售）
+- 违规医疗疾病治愈宣称：FDA approved、cure、treats arthritis、pain relief、heals disease（触发 FDA 违规禁售）
+- 纺织品竹纤维违规宣称：100% bamboo / pure bamboo（未按 FTC 规定标注 rayon/viscose from bamboo）
+- 第三方注册商标通用化侵权：Velcro（魔术贴）、Thermos（保温杯）、PopSockets（气囊支架）、Gore-Tex 等
 - 品类错词：实物没有的机制、认证、功效、兼容（见 overlay）
 - 图上 warranty / guarantee / certified / prime 徽章
 - 标题超过 200 字符硬性上限（触发搜索抑制），或包含禁用符号 `! $ ? _ { } ^ ¬ ¦` 或中文全角符号

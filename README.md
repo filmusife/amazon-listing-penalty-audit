@@ -7,6 +7,7 @@
 ## 核心特性
 
 - **0–100 风险量化评分**：基于官方红线分级量化风险（健康良好 / 中度风险 / 高危受限 / 极度危险）。
+- **原生 HTML 页面智能解析**：支持 `python scripts/scan_listing.py --html pdp.html --format summary`，自动提取 `#productTitle`、`#bylineInfo`、`#feature-bullets`、`#productOverview_feature_div`、图库与 A+ ALT，秒级生成体检报告。
 - **爬虫管道符智能清洗**：自动解耦爬虫/ERP/`<title>` 标签拼接的管道符 ` | `，杜绝误判卖家违规与虚假“系统腰斩”。
 - **移动端 65 字符首屏呈现模拟**：诊断并重构标题黄金展示区（品牌 + 核心品类 + 核心规格），大幅拉升移动端 **点击率（CTR）**。
 - **2024 年 8 月 15 日五点新规排查**：严格筛查末尾句号、ALL CAPS、特殊符号/货币/Emoji（`™ ® © … † ‡ ± ~ € £ ¥ ✓ ❌ ★ 【】` 等），防止被亚马逊 AI 强制重写。
@@ -16,9 +17,17 @@
   - 五点描述：推荐 3–5 条，单条 ≤ 255 字符，总长 ≤ 1,000 字符。
   - A+ 图片 ALT：严格 ≤ 100 字符（A+ Content Manager 系统硬上限）。
   - Search Terms：严格 < 250 字节（UTF-8 编码，非字符数）。
-- **高危下架红线排查**：EPA/FIFRA 未申报杀菌农药宣称、第三方注册商标通用化侵权陷阱（Velcro、Thermos、PopSockets 等）、未认证环保宣称（eco-friendly 等）。
-- **双轨交付（Dual Delivery）**：同时输出单字段纯英文独立代码块（Seller Central 网页端直接粘贴）与整套全变体 **标准平铺表格（Flat Table / TSV 格式）**（直接导入官方库存批量上传模板）。
-- **Rufus 5 组模拟问答压力测试**：闭环检验人群定位、核心规格、装箱清单、使用场景与维护边界，杜绝买家向 AI 提问时被竞品截流。
+- **高危下架红线排查**：
+  - EPA/FIFRA 未申报杀菌农药宣称（`anti-microbial`, `mold-resistant`, `disinfectant`）。
+  - FDA 违规医疗疾病治愈宣称（`cure`, `treats arthritis`, `pain relief`）。
+  - FTC 纺织品竹纤维宣称违规（`100% bamboo` 须标明 `rayon/viscose from bamboo`）。
+  - 第三方注册商标通用化侵权陷阱（`Velcro`, `Thermos`, `PopSockets`, `Gore-Tex` 等）。
+  - 未认证环保宣称（`eco-friendly`, `environmentally friendly` 等）。
+- **双轨交付（Dual Delivery）与 PartialUpdate 安全准则**：
+  - 单字段纯英文独立代码块（Seller Central 网页端直接粘贴）。
+  - 全变体 **标准平铺表格（Flat Table / TSV 格式）**：严格包含 `update_delete = PartialUpdate`，杜绝上传清空卖家后台未填属性资产。
+- **COSMO 15 节点常识图谱映射**：将产品规格与使用场景全面映射为图谱三元组，抢占多跳推荐流量。
+- **Rufus 事实就绪度评分（0–100）与 5 组拟真问答压力测试**：闭环检验人群定位、核心规格、装箱清单、使用场景与维护边界，杜绝买家向 AI 提问时被竞品截流。
 
 ## 安装
 
@@ -56,18 +65,18 @@ git clone https://github.com/filmusife/amazon-listing-penalty-audit.git \
 6. **描述 / 图片数字与实物不符（消灭 INAD 货不对板退货）**
 7. **30 天 list price 改价超过 5 次（秒杀/券 V 型不计）**
 8. **跨变体图片串色 / 规格图错配**
-9. **夸大词 / 政策违禁词 / 2024新规符号排查（含保修、EPA、商标侵权）**
+9. **夸大词 / 政策违禁词 / 2024新规符号排查（含保修、EPA、FDA、FTC、商标侵权）**
 10. **A+ 对比表 / FAQ / 视频与当前子体不一致**
 
 ## 目录结构
 
 - `SKILL.md`：核心流程、官方铁律与双轮驱动增长指引
-- `scripts/scan_listing.py`：确定性扫描脚本（支持 `--self-test` 自动化验证）
+- `scripts/scan_listing.py`：确定性扫描脚本（支持 `--self-test` 自动化验证，支持 `--html` 与 `--format summary`）
 - `references/amazon-policy.md`：亚马逊卖家中心现行政策红线与展示机制
-- `references/copy-rules.md`：CTR/CVR 文案优化与双轨交付标准规范
-- `references/report-template.md`：完整体检诊断报告结构模板
-- `references/rufus-cosmo.md`：COSMO 意图图谱与 Rufus 5 组问答测试规范
+- `references/copy-rules.md`：CTR/CVR 文案优化与双轨交付标准规范（含 PartialUpdate 准则）
+- `references/report-template.md`：完整体检诊断报告结构模板（含 3 天落地执行看板）
+- `references/rufus-cosmo.md`：COSMO 15 节点意图图谱与 Rufus 事实就绪度量化模型
 - `references/seven-items.md`：1–7 核心减分项判定标准
 - `references/extra-items.md`：8–10 扩展项判定标准
 - `references/evidence-collection.md`：证据收集与数据解耦清洗规范
-- `references/category-overlays.md`：细分类目专属覆盖层
+- `references/category-overlays.md`：细分类目专属覆盖层（覆盖小家电、服饰、美妆、食品、3C、家居、母婴、户外、汽配、宠物等）

@@ -90,6 +90,22 @@ Seller Central 五点的 Prohibited content 明确禁止 **Guarantee information
 
 ---
 
+## 高危红线 5：FDA / 违规医疗与疾病声称（Medical Claims）
+
+严禁在普通消费品、个护、小家电、补充剂中出现未经 FDA 批准的医疗治愈或疾病预防声称。此类词汇会触发亚马逊 Restricted Products 违禁品抓取机制，导致 ASIN 直接变狗下架：
+- 严禁声称：`FDA approved`（普通商品严禁擅自标注 FDA 批准）、`cure` / `cures disease`、`treats arthritis / diabetes / pain / acne`、`anti-inflammatory`（消炎/抗炎）、`pain relief`（无 OTC 药品文号不得宣称止痛）、`heals wounds`、`weight loss guarantee`。
+- 合规表达：仅陈述温和的舒适度体验，如 `provides ergonomic neck support`（提供人体工学颈部支撑），严禁将产品描述为能治疗病症。
+
+---
+
+## 高危红线 6：FTC 纺织品竹纤维宣称违规（Bamboo vs Rayon）
+
+美国联邦贸易委员会（FTC）与亚马逊严格禁止将经过化学黏胶法处理的纤维虚假宣传为“100% 竹纤维”或“天然竹子”：
+- 违规写法：`100% bamboo`、`pure bamboo`、`organic bamboo sheet`（用于床品、毛巾、服装等纺织品）。
+- 合规写法：必须依据 FTC 纺织品标识法严格声明为：`rayon made from bamboo` 或 `viscose made from bamboo`。
+
+---
+
 ## 标题策略（CTR 黄金展示区与长尾索引布局）
 
 - **长度与展示分层机制**：
